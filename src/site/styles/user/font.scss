@@ -26,7 +26,7 @@ mjx-container {
 
 /* 块级公式（$...$ 或 $$...$$）字体更大并居中显示 */
 mjx-container[jax="SVG"][display="true"] {
-  font-size: 1.4em !important;
+  font-size: 1.0em !important;
   display: block;
   text-align: center;
   margin: 1em 0;
