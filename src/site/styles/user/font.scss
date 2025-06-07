@@ -1,24 +1,18 @@
+/* /src/site/styles/user/font.scss */
+
 body {
-  font-family: "LXGW WenKai Screen", sans-serif; /* 正文使用霞鹜文楷 */
+  --font-default: "LXGW WenKai Screen", sans-serif;
+  --font-code: "Fira Code", "JetBrains Mono", "Courier New", monospace;
+  font-family: var(--font-default);
 }
 
-/* ======== 为 LaTeX 公式重置字体设置的部分 ======== */
-
-/* 针对 MathJax 渲染容器 */
-/* MathJax 2 和 MathJax 3 的类名略有不同，都加上以确保兼容性 */
-.MathJax,
-.mjx-container,
-.mjx-chtml, /* MathJax 2/3 CommonHTML 渲染器 */
-.mjx-svg, /* MathJax 2/3 SVG 渲染器 */
-.mjx-html { /* MathJax 2 HTML-CSS 渲染器 */
-  font-family: serif !important; /* 强制使用衬线字体，通常是默认的数学字体 */
+/* 正文使用霞鹜文楷 */
+p, span, li, h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-default);
 }
 
-/* 针对 MathJax 内部的字体元素，确保它们也重置 */
-.MathJax span,
-.mjx-container span,
-.mjx-chtml span,
-.mjx-svg span,
-.mjx-html span {
-  font-family: serif !important; /* 或者 'Times New Roman', 'Arial', 'sans-serif' 等，具体看你希望什么字体作为默认 */
+/* 代码块和行内代码使用支持公式渲染的字体 */
+pre, code, kbd, samp {
+  font-family: var(--font-code);
+  font-feature-settings: "liga" 0; /* 关闭连字，确保公式符号正常显示 */
 }
