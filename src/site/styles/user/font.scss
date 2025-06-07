@@ -19,7 +19,7 @@ pre, code, kbd, samp {
 
 /* 渲染 MathJax 的公式字体（适配 MathJax v3 的 SVG 输出） */
 mjx-container {
-  font-size: 1.2em !important;        /* 行内公式字体稍微放大 */
+  font-size: 1.0em !important;        /* 行内公式字体稍微放大 */
   line-height: 1.6;
   font-family: 'STIX Two Math', 'Times New Roman', serif; /* 可选：更好的数学字体 */
 }
