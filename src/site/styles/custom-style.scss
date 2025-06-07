@@ -3,11 +3,101 @@ body {
       ADD YOUR CUSTOM STYLING HERE. (INSIDE THE body {...} section.)
       IT WILL TAKE PRECEDENCE OVER THE STYLING IN THE STYLE.CSS FILE.
    ***/
-    //  background-color: white;
-    //  .content {
-    //   font-size: 14px;
-    //  }
-    //  h1 {
-    //   color: black;
-    //  }
+
+    /* 状态栏浮动设置 - 来自 AnubisNekhet (AGPLv3 License) */
+    --status-bar-position: absolute;
+    --status-bar-radius: var(--radius-m);
+}
+
+/* 强制增加图片对齐语法 */
+/* 在md文件中，图片的对齐语法是：![[Pasted image 20221125235721.png#right]] */
+
+/* 不填写默认居中 */
+.markdown-source-view.mod-cm6.is-live-preview .image-embed,
+.markdown-preview-view .image-embed {
+  display: flex;
+  justify-content: center; /* 水平居中 */
+  align-items: center; /* 垂直居中 */
+}
+
+/* 如果图片的链接中包含 #right 的，图片居右显示 */
+.markdown-source-view.mod-cm6.is-live-preview [src*="#right"],
+.markdown-preview-view .image-embed[src*="#right"] {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* 如果图片的链接中包含 #left 的，图片居左显示 */
+.markdown-source-view.mod-cm6.is-live-preview [src*="#left"],
+.markdown-preview-view .image-embed[src*="#left"] {
+  display: flex;
+  justify-content: flex-start;
+}
+
+/* 远程 Image 居中 */
+img [src*="#https"],
+img [src*="#http"] {
+  display: block !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* 源模式中内容居中 */
+.markdown-source-view.mod-cm6 .cm-content > * {
+  margin: auto auto !important;
+}
+
+/* Mermaid 图表 SVG 限宽设置 */
+svg[id^="m"][width][height][viewBox] {
+    min-width: 150px;
+    max-width: 250px;
+    width: 80%;
+    height: auto;
+}
+
+/* Mermaid 容器居中 */
+div.mermaid {
+    text-align: center;
+}
+
+/* 浮动状态栏样式（AnubisNekhet） */
+body .status-bar {
+    transform: translateX(calc(100% + 5px));
+    transition: transform 300ms 150ms;
+    bottom: 5px;
+    right: 5px;
+}
+
+body .status-bar::before {
+    width: 100%;
+    min-height: 100%;
+    content: " ";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    transform: translateX(-100%);
+}
+
+body .status-bar:hover {
+    transform: none;
+    transition: transform 300ms 150ms;
+}
+
+/* 表格居中 */
+.markdown-reading-view table {
+	margin: 0 auto;
+}
+
+.markdown-source-view.mod-cm6 .cm-table-widget .table-wrapper {
+	margin: 0 auto;
+}
+
+/* 解决标题后 hr 的上边距 */
+body.theme-light .markdown-preview-view h1 + hr, 
+body.theme-light .markdown-preview-view h2 + hr,
+body.theme-light .markdown-preview-view h3 + hr, 
+body.theme-light .markdown-preview-view h4 + hr, 
+body.theme-light .markdown-preview-view h5 + hr, 
+body.theme-light .markdown-preview-view h6 + hr {
+  margin-top: -0.4rem !important;
 }
