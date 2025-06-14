@@ -838,6 +838,7 @@ $$y=\frac1{1+e^{-z}}=\frac1{1+e^{-(w^Tx+b)}}\quad,\quad\text{其中}y\in(0,1),z=
 ![Pasted image 20250523130546.png|227](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250523130546.png)
 
 
+
 logistic 回归只能用于解决二分类问题，将它推广为多项逻辑斯蒂回归模型 (multi-nominal
 logistic model, 即 **softmax 函数**), 用于处理多类分类问题，可以得到处理多类分类问题的 softmax 回归
 
@@ -1105,13 +1106,613 @@ $$\mathbf{S}_w = \Sigma_1 + \Sigma_2$$
 #todo 
 
 ---
-## 05 神经网络与深度学习
+## 04 神经网络与深度学习
+
+### 4.1 前馈神经网络与参数优化
+
+神经网络基本单元：MCP 神经元
+神经元因何连接：赫布理论
+神经元链接成"网"：感知机
+
+#### 基本概念
+
+神经元是深度学习模型中基本单位。可以如下刻画神经元功能：
+1. 对相邻前向神经元输入信息进行加权累加：$In=\sum_i^n=w_i*a_i$
+2. 对累加结果进行非线性变换 (通过激活函数) $:g(x)$
+3. 神经元的输出：Out $=g(In)$
+
+![Pasted image 20250422095711.png|375](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250422095711.png)
+ 
+神经网络使用非线性函数作为激活函数（activation function），通过对多个非线性函数进行组合，来实现对输入信息的非线性变换：
+![Pasted image 20250422095734.png|375](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250422095734.png)
+
+> [!NOTE] Sigmoid 函数性质
+> - 概率形式输出：函数是单调递增的，其值域为 (0,1), 可用作概率值
+> - 单调递增：对输入 z 没有取值范围限制，但当 z 大于 (小于) 一定数值后，函数输出无限逼近 1 (0), 当 z 等于 0 时，函数输出为 0.5
+> - 非线性变化：z 取值在 0 附近时，函数输出值变化比较大，且是非线性变化，但 z 取值很大或很小时，函数输出值几乎不变
+
+
+> [!tip] 梯度消失问题
+> sigmoid 函数导数小于 1，在使用反向传播更新参数，容易出现导数过于接近 0 的情况
+
+
+> [!NOTE] Relu 函数性质
+> - 当输入 $x\geq0$ 时，ReLU 的导数为常数，这样可有效缓解梯度消失这一问题
+> - 当输入 $x<0$ 时，ReLU 的梯度总是 0，导致神经网络中若干参数激活值为 0，即参与分类等任务神经元数目稀缺，这种稀疏性可以在一定程度上克服机器学习中经常出现的过拟合现象
+> 	- 然而，当 x<0 时，ReLU 梯度为 0 也导致神经元“死亡”, 即神经元对应权重永远不会更新
+> - 为了解决这个问题，可以使用其他激活函数，如 Leaky ReLU 或 Parametric ReLU, 它们在 x<0 时梯度取值非零
+
+
+Softmax 函数一般用于多分类问题中，其将输入数据 $x_i$ 映射到第 $i$ 个类别的概率 $y_i$ 如下计算：
+$$y_i=\mathrm{softmax}(x_i)=\frac{e^{x_i}}{\sum_{j=1}^ke^{x_j}}$$
+![Pasted image 20250422095830.png|250](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250422095830.png)
+
+#### 感知机模型
+
+早期的感知机结构和 MCP 模型相似，由一个输入层和一个输出层构成，因此也被称为 “单层感知机”。感知机的输入层负责接收实数值的输入向量，输出层则能输出 1 或 -1 两个值
+![Pasted image 20250530144957.png|400](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250530144957.png)
+
+单层感知机可以作为一种**线性二分类模型**
+
+单层感知机可模拟逻辑与 (AND)、逻辑与非 (NAND) 和逻辑或 (OR) 等线性可分函数，但是**无法完成逻辑异或 (XOR)** 这一非线性可分逻辑函数任务
+
+多层感知机由输入层、输出层和至少一层的隐藏层构成 👉也叫做**前馈神经网络**
+- 网络中各个隐藏层中神经元可接收相邻前序隐藏层中所有神经元传递而来的信息，经过加工处理后将信息输出给相邻后续隐藏层中所有神经元。
+- 各个神经元接受前一级的输入，并输出到下一级，模型中没有反馈 
+- 层与层之间通过“**全连接**”进行链接，即两个相邻层之间的神经元完全成对连接，但层内的神经元不相互连接
+![Pasted image 20250530145120.png|475](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250530145120.png)
+
+#### 如何优化网络参数？
+
+从标注数据出发，优化模型参数：**监督学习过程**
+- 标注数据：$(x_i,y_i)(1\leq i\leq N)$
+- 评分函数 (scoring function) 将输入数据映射为类别置信度大|小：s $=f(x)=W\varphi(x)$
+- 损失函数来估量模型预测值与真实值之间的差距。损失函数给出的差距越小，则模型鲁棒性就越好。|常用的损失函数有 softmax 或者 SVM
+![Pasted image 20250530150821.png|425](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250530150821.png)
+
+损失函数（Loss Function）：计算模型预测值与真实值之间的误差
+- 均方误差损失函数：计算预测值和实际值之间距离（即误差）的平方来衡量模型优劣
+	$$\text{MSE} = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2$$
+- 交叉熵损失函数：**度量两个概率分布间的差异**
+	$$H(y_i,\hat{y}_i)=-y_i*\log(\hat{y}_i)=-\sum_{j=1}^{K}y_{i,j}*\log(\hat{y}_{i,j})$$
+	$y_i$ 是样本 $x_i$ 分类的真实概率分布、$\hat{y}_i$ 是模型预测概率分布
+	**交叉熵越小，两个概率分布 $y_i$ 和 $\hat{y}_i$ 越接近**
+
+  
+##### 梯度下降 Gradient Descent
+
+梯度下降算法是一种使得损失函数最小化的方法。一元变量所构成函数𝒇在𝒙处梯度为：
+$$\frac{df(x)}{dx} = \lim_{h \to 0} \frac{f(x + h) - f(x)}{h}$$
+- 在多元函数中，梯度是对每一变量所求导数组成的向量
+	$$\nabla f(\mathbf{x})=\begin{bmatrix}\frac{\partial f(\mathbf{x})}{\partial x_1}\\\frac{\partial f(\mathbf{x})}{\partial x_2}\\\vdots\\\frac{\partial f(\mathbf{x})}{\partial x_n}\end{bmatrix}$$
+- 梯度的反方向是函数值下降最快的方向，因此是损失函数求解的方向
+
+假设损失函数 $f(x)$ 是连续可微的多元变量函数, 其泰勒展开如下 ( $\Delta x$ 是微小的增量):
+$$f(x+\Delta x)=f(x)+f'(x)\Delta x+\frac{1}{2}f''(x)(\Delta x)^2+\cdots+\frac{1}{n!}f^{(n)}(x) (\Delta x)^n$$
+$$
+f(x+\Delta x)-f(x)\approx(\nabla f(x))^T\Delta x$$
+- 为了保证 $(\nabla f(\mathbf{x}))^T\Delta\mathbf{x}<0$, 我们选择**让 $\Delta\mathbf{x}$ 与梯度 $\nabla f(\mathbf{x})$ 的方向相反**。最简单的选择是让
+$\Delta\mathbf{x}$ 正比于梯度的负方向：
+	$$\Delta\mathbf{x}=-\eta\nabla f(\mathbf{x})$$
+- 其中，$\eta$ 是一个正的常数，称为学习率 (learning rate) 或**步长** (step size)。学习率控制着每次迭代中参数更新的幅度。
+- 将 $\Delta\mathbf{x}$ 代入 $\mathbf{x}+\Delta\mathbf{x}$, 得到参数的更新公式：
+	$$\mathbf{x}_{new}=\mathbf{x}_{old}-\eta\nabla f(\mathbf{x}_{old})$$
+- 这个公式表示在每次迭代中，我们都沿着当前点 $\mathbf{x}_{old}$ 处梯度 $\nabla f(\mathbf{x}_{old})$ 的反方向移动一小步 (步长为 $\eta$), 从而更新参数到 $\mathbf{x}_{new}$, 希望能够逐步接近损失函数的最小值
+
+##### 误差反向传播 Error Back Propagation (BP)
+
+BP 算法是一种将输出层误差反向传播给隐藏层进行参数更新的方法
+
+![Pasted image 20250530152625.png|450](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250530152625.png)
+
+> [!note]- 前向传播
+> 
+> ![Pasted image 20250530152657.png|425](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250530152657.png)
+> ![Pasted image 20250530152702.png|425](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250530152702.png)
+> ![Pasted image 20250530152710.png|425](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250530152710.png)
+> ![Pasted image 20250530152716.png|425](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250530152716.png)
+> ![Pasted image 20250530152723.png|425](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250530152723.png)
+
+> [!note]- 反向传播-梯度下降
+> 
+> ![Pasted image 20250530152808.png|425](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250530152808.png)
+> ![Pasted image 20250530152823.png|425](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250530152823.png)
+> ![Pasted image 20250530152847.png|425](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250530152847.png)
+
+#### 梯度下降算法
+
+- 批量梯度下降（Batch Gradient Descent, BGD） 
+	- 一次迭代对所有样本进行计算，利用矩阵进行操作可实现并行
+	- 当目标函数为凸函数时，BGD 一定能够得到全局最优
+	- 当样本数目很大时，每迭代一步都需要对所有样本计算，训练过程会很慢
+- 随机梯度下降（Stochastic Gradient Descent，SGD） 
+	- 在每轮迭代中，随机优化一个样本的损失，每一轮参数的更新速度大大加快
+	- 准确度下降。即使目标函数为强凸函数，SGD 仍无法线性收敛
+	- 可能会收敛到局部最优，由于单个样本不能代表全体样本趋势
+	- 不易于实现并行
+- 小批量梯度下降（Mini-Batch Gradient Descent, MBGD）
+	- 每次迭代使用 **batch_size** 个样本来对参数进行更新
+	- **目前最常用**
+
+> [!NOTE] batch size 的选择带来的影响
+> 
+> 在合理地范围内，增大 batch size 的好处：
+> - 内存利用率提高了
+> - 跑完一次 epoch (全数据集) 所需的迭代次数减少
+> - 在一定范围内，一般来说 Batch\_Size 越大，其确定的下降方向越准，引起训练震荡越小
+> 
+> 盲目增大 batch\_size 的坏处：
+> - 内存容量可能撑不住了
+> - 跑完一次 epoch (全数据集) 所需的迭代次数减少，但要想达到相同的精度，其所花费的时间大大增加了，从而对参数的修正也就显得更加缓慢
+> - Batch Size 增大到一定程度，其确定的下降方向已经基本不再变化
+
+### 4.2 卷积神经网络
+
+为什么需要卷积神经网络👇
+当模型参数数量变得巨大时，不仅会占用大量计算机内存，同时也使神经网络模型变得难以训练收敛。因此，对于图像这样的数据，不能直接将所构成的像素点向量与前馈神经网络神经元相连。
+
+#### 卷积
+
+- 卷积（convolution）：就是针对像素点的**空间依赖性**来对图像进行处理的一种技术
+- 卷积核（kernel）：一个二维矩阵 (可以是多维的，例如 RGB 图像，有三维的卷积核，分别针对三个通道进行 convolution)
+	- 权重：通过**数据驱动机制学习**得到，捕捉图像空间特征
+- 卷积操作：
+	- 填充 padding：卷积后的图像分辨率与原图一致
+		- 否则，会进行下采样 subsampling
+	- 步长 Stride：每进行一次卷积计算后，卷积核移动的格数
+- 感受野（receptive field）：感受野是特征图上一个点对应输入图像上的区域
+	- 特征图：卷积滤波结果
+	- **局部感知，参数共享**
+	- **特征选择性**
+
+不同卷积核可被用来刻画视觉神经细胞对外界信息感受时的不同选择性：
+![Pasted image 20250422103311.png|475](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250422103311.png)
+
+> [!NOTE] 下采样约减抽象
+> 下采样约减抽象：假设被卷积图像大小为 $w \times w$ 、卷积核大小为 $F \times F$ 、上下左右四个边缘填充像素行/列数为 $P = [F/2]$ 、步长为 $S$ ，则被卷积结果的分辨率是 $\frac{W-F+2P}{S} + 1$ 。
+
+#### 池化
+
+图像中存在较多冗余，可用某一区域子块的统计信息 （如最大值或均值等）来刻画该区域中所有像素点呈现的空间分布模式
+
+池化 Pooling: 对输入的特征图进行下采样，以获得最主要的信息
+- Max Pooling
+- Mean Pooling
+- k-max Pooling
+![Pasted image 20250614082039.png|258](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250614082039.png)
+
+
+分布式向量表达 (distributed vector representation)：卷积神经网络在若干次卷积操作、接着对卷积所得结果进行激活函数操作和池化操作下，最后通过全连接层来学习得到输入数据的特征表达
+- 卷积层：提取局部特征
+- 池化层：降维
+- 激活函数：非线性化
+- 全连接层：用于输出想要的结果 (下游任务)
+![Pasted image 20250422104649.png|425](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250422104649.png)
+
+### 4.3 循环神经网络
+
+循环神经网络：一类**处理序列数据**（如文本句子、视频帧等）时所采用的网络结构
+- 本质是希望模拟人所具有的记忆能力，在学习过程中记住部分已经出现的信息，并利用所记住的信息影响后续结点输出
+
+#### 基本架构
+
+在时刻 $t$, 一旦得到**当前输入数据 $x_t$**, 循环神经网络会结合**前一时刻 $t-1$ 得到的隐式编码 $h_{t-1}$**, 如下产生**当前时刻隐式编码 $h_t$**:
+	$$h_t=\Phi(\mathrm{U}\times x_t+\mathrm{W}\times h_{t-1})$$
+- 这里 $\Phi(\cdot)$ 是激活函数，一般可为 **Sigmoid 或者 Tanh 激活函数**，使模型能够忘掉无关的信息，同时更新记忆内容。U 与 W 为模型参数
+
+![Pasted image 20250422112301.png|400](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250422112301.png)
+
+循环神经网络读入每个单词后，先产生对应单词的隐式编码，再如下得到一个句子的向量编码：
+1. **最后一个单词输出**作为整个句子的编码
+	- 因为句子中所有单词的信息均被后向传递
+2. 将每个单词的隐式编码进行加权平均，将**加权平均结果**作为整个句子的向量编码表示
+![Pasted image 20250607204644.png|450](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250607204644.png)
+#### 梯度传递
+
+- 时刻 $t$ 输入数据 $x_t$ (文本中的单词) 的隐式编码为 $h_t$、其真实输出为 $y_t$ (单词词性)、模型预测 $x_t$ 的词性是 $O_t$
+- 参数 $W_x$ 将 $x_t$ 映射为隐式编码 $h_t$、参数 $W_o$ 将 $h_t$ 映射为预测输出 $O_t$、$h_{t-1}$ 通过参数 $W_h$ 参与 $h_t$ 的生成。
+- 图中 $W_x$、$W_o$ 和 $W_h$ 是复用参数
+![Pasted image 20250422113534.png](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250422113534.png)
+
+假设时刻 $t$ 隐式编码如下得到：$h_t=\tanh(W_xx_t+W_hh_{t-1}+b)$。使用交叉熵损失函数计算时刻 $t$ 预测输出与实际输出的误差 $E_t$。显然，整个序列产生的误差为 $E=\frac12\sum_{t=1}^TE_t.$
+
+#### LSTM
+
+由于 tanh 函数的导数取值位于 0 到 1 区间，对于长序列而言，若干多个 0 到 1 区间的小数相乘，会使得参数求导结果很小，引发梯度消失问题。为了**缓解梯度消失问题**，长短时记忆模型（LongShort-Term Memory，LSTM）被提出
+
+引入**内部记忆单元**和**门**
+
+
+![Pasted image 20250422115238.png|475](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250422115238.png)
+
+| 符号      | 内容描述/操作                                                                                                                                                                                              |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| $x_t$   | 时刻 t 输入的数据                                                                                                                                                                                           |
+| $i_t$   | 输入门的输出: $i_t = sigmoid (W_{xi}x_t + W_{hi}h_{t-1} + b_i)$<br>( $W_{xi}$ 、 $W_{hi}$ 和 $b_i$ 为输入门的参数)<br>**输入门 $i_t$ 控制有多少信息流入当前时刻内部记忆单元 $c_t$**                                                       |
+| $f_t$   | 遗忘门的输出: $f_t = sigmoid (W_{xf}x_t + W_{hf}h_{t-1} + b_f)$<br>( $W_{xf}$ 、 $W_{hf}$ 和 $b_f$ 为遗忘门的参数)<br>**遗忘门控制上一时刻内部记忆单元 $c_{t-1}$ 中有多少信息可累积到当前时刻内部记忆单元 $c_t$**                                      |
+| $o_t$   | 输出门的输出: $o_t = sigmoid (W_{xo}x_t + W_{ho}h_{t-1} + b_o)$<br>( $W_{xo}$ 、 $W_{ho}$ 和 $b_o$ 为输出门的参数)<br>**输出门控制 $c_t$ 最终向 $h_t$ 的输出情况**                                                               |
+| $c_t$   | 内部记忆单元的输出：$c_t={f_t}\odot c_{t-1}+{i_t}\odot tanh (W_{xc}{x_t}+W_{hc}{h_{t-1}}+b_c)$<br>$(W_{xc}$、$W_{hc}$ 和 $b_c$ 为记忆单元的参数）                                                                         |
+| $h_t$   | 时刻 $t$ 输入数据的隐式编码：<br>$$h_{t}=o_{t}\odot\tanh (c_{t})=o_{t}\odot\tanh (f_{t}\odot c_{t-1}+i_{t}\odot\tanh (W_{xc}x_{t}+W_{hc}h_{t-1}+b_{c}))$$<br>**(输入门、遗忘门和输出门的信息 $i_t$、$f_t$、$o_t$ 一起参与得到 $h_t$）** |
+| $\odot$ | 两个向量中对应元素按位相乘 (element-wise product)<br>如: $[10\ 6\ 3\ 7]\odot[0.2\ 0.1\ 0.8\ 0.5]=[2\ 0.6\ 2.4\ 3.5]$                                                                                               |
+
+一些细节：
+- 三种门结构的输出 $i_t$、$f_t$ 和 $o_t$ 值域为 $(0,1)$
+- 每个时刻 t 只有 $ht$ 作为本时刻的输出以用于分类等处理
+	- 实际上，在每个时刻 $t$ 中只有内部记忆单元信息 $C_t$ 和隐式编码 $h_t$ 这两种信息起到了对序列信息进行传递的作用
+- LSTM 如何克服梯度消失？
+	- **LSTM 通过引入门结构，在从 t 到 t+1 过程中引入加法来进行信息更新，避免了梯度消失问题**
+
+
+### 4.4 注意力机制与正则化
+
+#### 注意力机制
+
+首先生成每个单词的内嵌向量（包含了单词在句子中位置编码向量信息），记为 $w_i (1 \leq i \leq 4)$，如下计算每个单词 $w_i$ 的查询向量（query）、键向量 (key) 和值向量 (value):
+- 查询向量: $q_i = W^q \times w_i$ 👉 用于搜索的单词
+- 键向量: $k_i = W^k \times w_i$ 👉 被搜索物品的描述信息 (例如标题)
+- 值向量: $v_i = W^v \times w_i$ 👉 被搜索物品实际的语义内容
+- 后面可以看到，对每个单词而言 $w_i$，$W^q$、$W^k$ 和 $W^v$ 三个映射矩阵都是一样的，也是自注意力模型需要训练的全部参数
+- 自注意力模型就是要挖掘单词 $w_i$ 与其他单词在句子中因为上下文（context）关联而具有的自注意力取值大小
+
+以图 5.21 中单词 $w_3$ 与其他单词之间自注意力取值大小计算为例:
+1. 计算 $w_3$ 所对应查询向量与其他单词键向量之间的点积，该点积可作为单词 $w_3$ 与其他单词之间的关联度: $\alpha_{3i} = q_3 \cdot k_i$
+2. 对 $\alpha_{3i}$ 结果通过 softmax 函数进行归一化操作，得到 $\alpha'_{3i}$。对于给定“项庄舞剑、意在沛公”句子，$\alpha'_{3i}$ 记录了“意在”单词与其他单词所具有的重要程度（即注意力）
+3. $\alpha'_{3i}$ 乘以每个单词 $w_i$ 所对应的值向量 $v_i$，即 $\alpha'_{3i} \times v_i$
+4. 对上一步结果进行 $\sum_i \alpha'_{3i} \times v_i$，这个结果作为在当前句子语境下单词 $w_3$ “注意”到与其他单词的关联程度（self-attention）
+
+![Pasted image 20250614083336.png|475](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250614083336.png)
+
+#### 正则化
+
+正则化系数 👉 缓解神经网络在训练过程中出现的过拟合问题
+
+有如下几种方法：
+- Dropout
+	每次参数更新时**随机丢掉一部分神经元**来减少神经网络复杂度，防止过拟合
+- Batch-Normalization（批归一化）
+	通过规范化的手段，把神经网络每层中任意神经元的输入值**分布改变到均值为 0、方差为 1 的标准正态分布**
+- L1-Norm & L2-Norm
+	$L_1$ 范数：数学表示为 $\|W\|_1=\Sigma_{i=1}^\mathbb{N}|w_i|$, 指模型参数 $W$ 中各个元素的绝对值之和
+	$L_1$ 范数也被称为 “稀疏规则算子” ( Lasso regularization)  
+	$L_2$ 范数：数学表示为 $\|W\|_2=\sqrt{\Sigma_{i=1}^\mathbb{N}w_i^2}$, 指模型参数 $W$ 中各个元素平方和的开方
+	$Loss=原始损失+\lambda×正则项$
+	"结构风险最小化"
+
+
+### 4.5 自然语言和计算机视觉应用
+
+如何获得单个单词的词向量？
+1. 将该单词表示成 $V$ 维 one-hot 向量 $X$
+2. 隐藏层神经元大小为 $N$, 每个神经元记为 $h_i (1\leq i\leq N)$
+3. 向量 $X$ 中每个 $x_i (1\leq i\leq$ $V)$ 与隐藏层神经元是全连接，连接权重矩阵为 $W_{V\times N}$
+4. 这里 $W_{V\times N}$ 和 $W_{N\times V}^{\prime}$ 为模型参数
+5. 一旦训练得到了下图的神经网络，就可以将输入层中 $x_k$ 与隐藏层连接权重为 $\{w_{k1}, w_{k2},\cdots, w_{kN}\}$ (隐藏层) 作为第 $k$ 个单词 $N$ 维词向量 (word vector)
+
+![Pasted image 20250607211951.png|450](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250607211951.png)
+
+> [!tip] Word2Vec 的两种训练模式
+> Continuous Bag-of-Words (CBoW)：根据某个单词所处的上下文单词来预测该单词
+> 
+> 可用 $x_k$ 的前序 $k-1$ 个单词和后续单词 $c-k$ 个单词一起来预测 $x_k$
+> - 每个输入单词仍然是 $V$ 维向量（可以是 one-hot 的表达）
+> - 隐式编码为每个输入单词所对应编码的均值
+> 
+> ![Pasted image 20250607212711.png|400](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250607212711.png)
+> 
+> Skip-gram：利用某个单词来分别预测该单词的上下文单词
+> 
+> 无论是 CBOW 还是 Skip-Gram 模式，随着单词个数数目增加，模型参数数目也迅速上升
+> 👉 加快模型训练：层次化 Softmax（Hierarchical Softmax）与负采样（Negative Sampling）
+
+
+---
+## 05 强化学习
+
+### 5.1 强化学习定义
+
+在智能主体与环境的交互中，学习能最大化收益的行动模式：
+![Pasted image 20250529201321.png|375](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250529201321.png)
+- 智能体（agent）：强化学习算法的主体，根据经验做出主观判断并执行动作
+- 环境（environment）：智能体以外的一切统称为环境，环境在与智能体的交互中，能被智能体所采取的动作影响，同时环境也能向智能体反馈状态和奖励
+- 状态（state）：智能体对环境的一种理解和编码，通常包含了对智能体所采取决策产生影响的信息
+- 动作（action）：智能体对环境产生影响的方式
+- 策略（policy）：智能体在所处状态下去执行某个动作的依据，即给定一个状态，智能体可根据一个策略来选择应该采取的动作
+- 奖励（reward）：智能体序贯式采取一系列动作后从环境获得的收益
+
+三种学习方式对比：
+
+| 学习方式 | 学习依据 | 数据来源 | 决策过程 | 学习目标 |
+| --- | --- | --- | --- | --- |
+| 监督学习 | 基于监督信息 | 一次给定 | 单步决策（如分类和识别等） | 样本到语义标签的映射 |
+| 无监督学习 | 基于对数据结构的假设 | 一次给定 | 无 | 数据的分布模式 |
+| 强化学习 | 基于评估 | 在时序交互中产生 | 序贯决策（如棋类博弈） | 选择能够获取最大收益的状态到动作的映射 |
+
+
+#### 离散马尔可夫过程 Discrete Markov Process
+
+##### 基本概念
+
+随机过程：是一列随时间变化的随机变量;
+- 当时间是离散量时，一个随机过程可以表示为 $\{X_t\}_{t=0,1,2,\cdotp\cdotp\cdotp}$, 其中每个 $X_t$ 都是一个随机变量，这被称为离散随机过程
+
+马尔可夫链（Markov Chain）：满足马尔可夫性（Markov Property）的离散随机过程，也被称为离散马尔科夫过程
+- 𝒕+𝟏时刻状态仅与𝒕时刻状态相关
+- 二阶：𝒕 +𝟏时刻状态与𝒕和𝒕−𝟏时刻状态相关
+
+马尔可夫奖励过程（Markov Reward Process）：引入奖励
+- 奖励函数 $R{:}S\times S\mapsto\mathbb{R}$, 其中 $R(S_t,S_{t+1})$ 描述了从第 $t$ 步状态转移到第 $t+1$ 步状态所获得奖励
+- 在一个序列决策过程中，不同状态之间的转移产生了一系列的奖励 $(R_1,R_2,\cdotp\cdotp\cdotp)$, 其中 $R_{t+1}$ 为 $R(S_t,S_{t+1})$ 的简便记法
+- 为了比较不同的奖励序列，定义反馈 (return), 用来反映累加奖励：
+	$$G_t=R_{t+1}+\gamma R_{t+2}+\gamma^2R_{t+3}+\cdots $$
+	其中衰退系数 (decay factor) $\gamma\in[0,1]$
+
+
+马尔可夫决策过程（Markov Decision Process）：引入动作
+- 定义智能主体能够采取的动作集合为 $A$
+	可以是无限的
+- 由于不同的动作对环境造成的影响不同，因此状态转移概率定义为 $Pr(S_{t+1}|S_t,a_t)$，其中 $a_t \in A$ 为第 $t$ 步采取的动作
+	可以是随机概率性的转移
+- 奖励可能受动作的影响，因此修改奖励函数为 $R(S_t,a_t,S_{t+1})$
+
+
+> [!example]- 机器人移动问题
+> 
+> ![Pasted image 20250529204300.png|475](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250529204300.png)
+> 
+> 使用离散马尔可夫决策过程描述机器人移动问题：
+> - 随机变量序列 $\{S_t\}_{t=0,1,2,\cdots}$: $S_t$ 表示机器人第 $t$ 步所在位置（即状态），每个随机变量 $S_t$ 的取值范围为 $S=\{s_1,s_2,\cdots,s_9,s_d\}$
+> - 动作集合: $A=\{\text{上},\text{右}\}$
+> - 状态转移概率 $Pr(S_{t+1}|S_t,a_t)$: 满足马尔可夫性，其中 $a_t\in A$。状态转移
+> - 奖励函数：$R(S_t,a_t,S_{t+1})$ 
+> - 衰退系数：$\gamma\in[0,1]$
+
+
+综合以上信息，可通过 $MDP=\{S,A,Pr,R,\gamma\}$ 来刻画马尔科夫决策过程
+- 马尔可夫决策过程 $MDP=\{S,A,Pr,R,\gamma\}$ 是刻画强化学习中环境的标准形式
+- 马尔可夫决策过程可用如下序列来表示：
+![Pasted image 20250529204424.png|350](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250529204424.png)
+- 马尔科夫过程中产生的状态序列称为**轨迹** (trajectory), 可如下表示
+	$$(S_0,a_0,R_1,S_1,a_1,R_2,\cdots,S_T)$$
+- 轨迹长度可以是无限的，也可以有终止状态 $S_{T}$。有终止状态的问题叫做**分段**的 (episodic), 否则叫做**持续**的 (continuing)
+	- 分段问题中，一个从初始状态到终止状态的完整轨迹称为一个**片段** (episode)
 
 
 
+##### 策略学习
+
+智能主体如何与环境交互而完成任务？需要进行策略学习
+- 已知的：S A R $\gamma$ 
+- 不一定已知的：Pr
+- 观察到的：$(S_0,a_0,R_1,S_1,a_1,R_2,...,S_T)$
+
+策略函数：
+- 策略函数 $\pi{:}S\times A\mapsto[0,1]$, 其中 $\pi(\mathfrak{s},a)$ 的值表示在状态 s 下采取动作 $a$ 的概率
+- 策略函数的输出可以是确定的，即给定 s 情况下，只有一个动作 $a$ 使得概率 $\pi($ s, $a)$ 取值为 1。对于确定的策略，记为 $a=\pi(s)$
+
+为了对策略函数𝜋进行评估，定义
+- 价值函数 (Value Function) 
+	$V{:}S\mapsto\mathbb{R}$, 其中 $V_\pi(s)=\mathbb{E}_\pi[G_t|S_t=s]$
+	即在第 $t$ 步状态为 s 时，按照策略 $\pi$ 行动后在未来所获得反馈值的期望
+	$$G_{t}=R_{t+1}+\gamma R_{t+2}+\gamma^{2}R_{t+3}+\cdots $$
+- 动作-价值函数 (Action-Value Function) 
+	$q{:}S\times A\mapsto\mathbb{R}$, 其中 $q_\pi(s,a)=\mathbb{E}_\pi[G_t|S_t=s,A_t=a]$
+	表示在第 $t$ 步状态为 s 时，按照策略 $\pi$ 采取动作 $a$ 后，在未来所获得反馈值的期望
+
+这样，策略学习转换为如下优化问题：**寻找一个最优策略 $\pi^*$, 对任意 $s\in S$ 使得 $V_\pi^*(s)$ 值最大**
+
+> [!tip] 价值函数与动作-价值函数的关系——贝尔曼方程（Bellman Equation）
+> 价值函数的贝尔曼方程：
+> $$V_\pi(s)=\sum_{a\in A}\pi(s,a)q_\pi(s,a)$$
+> $$\nu_\pi(s) \gets \sum_{a \in A} \pi(s, a) \sum_{s' \in S} Pr(s' | s, a) [R(s, a, s') + \gamma \nu_\pi(s')]$$
+> - 当前状态价值函数等于瞬时奖励的期望加上后续状态的（折扣）价值函数的期望
+> - 价值函数取值与时间没有关系，只与策略π、在策略π下从某个状态转移到其后续状态所取得的回报、以及在后续所得回报有关
+> 
+> 动作-价值函数的贝尔曼方程：
+> $$q_\pi(s,a)=\sum_{s^{\prime}\in S}Pr(s^{\prime}|s,a)\left[R(s,a,s^{\prime})+\gamma V_\pi(s^{\prime})\right]$$
+> - 当前状态下的动作-价值函数等于瞬时奖励的期望加上后续状态的（折扣）动作-价值函数的期望
+
+### 5.2 基于价值的强化学习
+
+强化学习求解：在策略优化和策略评估的交替迭代中优化参数
+![Pasted image 20250529205513.png|475](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250529205513.png)
+
+策略评估和策略优化交替进行的强化学习求解方法叫做**通用策略迭代**
+
+#### 策略优化
+
+给定当前策略 $\pi$、价值函数 $V_\pi$ 和行动-价值函数 $q_\pi$ 时，可如下构造新的策略 $\pi^{\prime}$, $\pi^{\prime}$ 要满足如下条件：
+$$\pi ^{\prime }( s) = argmax _aq_\pi ( s, a)(对于任意s\in S)$$
+
+> [!example]-
+> ![Pasted image 20250529210225.png](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250529210225.png)
+
+#### 策略评估
+
+通过迭代计算贝尔曼方程进行策略评估
+- 动态规划
+- 蒙特卡洛采样
+- 时序差分（Temporal Difference）
+
+##### 动态规划
+
+> [!NOTE] 算法流程
+> - 初始化 $V_{\pi}$ 函数
+> - 循环
+> 	- 枚举 $s\in S$
+> 	$$\nu_\pi(s) \gets \sum_{a \in A} \pi(s, a) \sum_{s' \in S} Pr(s' | s, a) [R(s, a, s') + \gamma \nu_\pi(s')]$$
+> - 直到 $V_{\pi}$ 收敛
+
+
+> [!example]-
+> ![Pasted image 20250529210850.png|450](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250529210850.png)
+
+缺点：智能主体需要**事先知道状态转移概率**；**无法处理状态集合大小无限**的情况
+
+##### 蒙特卡洛采样
+
+给定状态 s，从该状态出发不断采样后续状态，得到不同的采样序列。通过这些采样序列来分别计算状态 s 的回报值，对这些回报值取均值，作为对状态 s 价值函数的估计，从而避免对状态转移概率的依赖
+
+> [!NOTE] 算法流程
+> - 选择不同的起始状态，按照当前策略 $\pi$ 采样若干轨迹，记它们的集合为 D
+> - 枚举 $s\in S$
+> 	- 计算 $D$ 中 s 每次出现时对应的反馈 $G_1,G_2,\cdots,G_k$
+> 		$$V_{\pi}(s)\leftarrow\frac{1}{k}\sum_{i=1}^{k}G_{i}$$
+> 
+
+> [!example]-
+> ![Pasted image 20250529211034.png|475](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250529211034.png)
+
+##### 时序差分
+
+可以看作蒙特卡罗方法和动态规划方法的有机结合
+- 从实际经验中获取信息，无需提前获知环境模型的全部信息
+- 利用前序已知信息来进行在线实时学习，无需等到整个片段结束（终止状态抵达）再进行价值函数的更新
+
+> [!NOTE] 算法流程
+> - 初始化 $V_\mathrm{\pi}$ 函数
+> - 循环
+> 	- 初始化 s 为初始状态
+> 	- 循环
+> 		- $a\sim\pi(s,\cdot)$
+> 		- 执行动作 $a$, 观察奖励 $R$ 和下一个状态 $s^\prime$
+> 		- 更新 $V_{\pi}(s)\leftarrow V_{\pi}(s)+\alpha[R(s,a,s^{\prime})+\gamma V_{\pi}(s^{\prime})-V_{\pi}(s)]$
+> 		- $s\leftarrow s^{\prime}$
+> 	- 直到 s 是终止状态
+> - 直到 $V_\mathrm{\pi}$ 收敛
+
+> [!example]-
+> ![Pasted image 20250529211552.png|475](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250529211552.png)
+
+#### 基于价值的强化学习算法
+
+结合策略优化和策略评估两个阶段，得到基于价值的强化学习算法
+
+> [!NOTE] 基于价值的强化学习算法
+> - 随机初始化 $V_{\pi}$
+> - repeat
+> 	- foreach $s \in S$ do
+> 		- $V_{\pi}(s) \leftarrow \max_{a} \sum_{s'} P(s'|s,a)[R(s,a,s')+\gamma V_{\pi}(s')]$
+> 	- end
+> - until $V_{\pi}$ 收敛
+> - $\pi(s) := \arg\max_{a} \sum_{s'} P(s'|s,a)[R(s,a,s')+\gamma V_{\pi}(s')]$
+
+> [!example]-
+> ![Pasted image 20250614101238.png](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250614101238.png)
+
+#### Q-Learning
+
+Q 学习中直接记录和更新动作-价值函数 $q_π$ 而不是价值函数 $V_π$, 这是因为策略优化要求已知动作-价值函数 $q_π$，如果算法仍然记录价值函数 $V_π$，在不知道状态转移概率的情况下将无法求出 $q_π$
+
+> [!NOTE] Q-Learning 算法流程
+> - 初始化 $q_\mathrm{\pi}$ 函数
+> - 循环
+> 	- 初始化 s 为初始状态
+> 	- 循环
+> 		- $a=\operatorname{argmax}_{a^{\prime}}q_{\pi}(s,a^{\prime})$
+> 		- 执行动作 $a$, 观察奖励 $R$ 和下一个状态 $s^\prime$
+> 		- 更新 $q_{\pi}(s,a)\leftarrow q_{\pi}(s,a)+\alpha\left[R+\gamma\max_{a^{\prime}}q_{\pi}(s^{\prime},a^{\prime})-q_{\pi}(s,a)\right]$
+> 		- $s\leftarrow s^{\prime}$
+> 	- 直到 s 是终止状态直到
+> - $q_\pi$ 收敛
+
+> [!example]-
+> 
+> ![Pasted image 20250530134531.png](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250530134531.png)
+> ![Pasted image 20250530134612.png](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250530134612.png)
+> ![Pasted image 20250530135029.png](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250530135029.png)
+> ![Pasted image 20250530135116.png](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250530135116.png)
+> ![Pasted image 20250530135301.png](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250530135301.png)
+
+##### 探索（exploration）与利用（exploitation）的平衡
+
+![Pasted image 20250530141237.png|450](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250530141237.png)
+
+为何 Q 学习收敛到非最优策略？
+- 算法中只有利用没有探索
+- (特定的 q 初始 q 函数，会让策略无法改变其轨迹)
+
+大体上利用，偶尔探索👇
+$\epsilon$ 贪心（$\epsilon$ -greedy）策略：
+$$\epsilon-greedy_{\pi}(s)=\left\{\begin{array}{ll}\operatorname{argmax}_{a} q_{\pi}(s, a), & \text { 以 } 1-\epsilon \text { 的概率 } \\ \text { 随机的 } a \in A, & \text { 以 } \epsilon \text { 的概率 }\end{array}\right.$$
+
+> [!NOTE] 加上 $\epsilon$ 贪心（$\epsilon$ -greedy）策略后的 Q-Learning
+> - 初始化 $q_\mathrm{\pi}$ 函数
+> - 循环
+> 	- 初始化 s 为初始状态
+> 	- 循环
+> 		- $a = \epsilon-greedy_{\pi}(s)$
+> 		- 执行动作 $a$, 观察奖励 $R$ 和下一个状态 $s^\prime$
+> 		- 更新 $q_{\pi}(s, a)\leftarrow q_{\pi}(s, a)+\alpha\left[R+\gamma\max_{a^{\prime}}q_{\pi}(s^{\prime}, a^{\prime})-q_{\pi}(s, a)\right]$
+> 		- $s\leftarrow s^{\prime}$
+> 	- 直到 s 是终止状态直到
+> - $q_\pi$ 收敛
+
+> [!example]-
+> ![Pasted image 20250530141250.png|475](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250530141250.png)
+
+##### 参数化与深度强化学习
+
+- 状态数量太多时，有些状态可能始终无法采样到
+- 状态数量无限时，不可能用一张表 (数组) 来记录𝑞函数的值
+👉 将𝑞函数参数化（parametrize），用一个非线性回归模型来拟合𝑞函数，例如 (深度) 神经网络
+![Pasted image 20250530141516.png|475](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250530141516.png)
+
+> [!NOTE] 深度 Q 学习算法 DQN
+> - 初始化 $q_\mathrm{\pi}$ 函数的参数 $\theta$
+> - 循环
+> 	- 初始化 s 为初始状态
+> 	- 循环
+> 		- 采样 $a\sim\epsilon-greedy_{\pi}(s;\theta)$
+> 		- 执行动作 $a$, 观察奖励 $R$ 和下一个状态 s'
+> 		- 损失函数 L $(\theta)=\frac12\begin{bmatrix}R+\gamma\max_{a^{\prime}}q_{\pi}(s^{\prime}, a^{\prime};\theta)-q_{\pi}(s, a;\theta)\end{bmatrix}^2$
+> 		- 根据梯度 $\partial L (\theta)/\partial\theta$ 更新参数 $\theta$
+> 		- $s\leftarrow s^{\prime}$
+> 	- 直到 s 是终止状态
+> - 指导 $q_{\pi}$ 收敛
+
+两个不稳定因素：
+- 相邻的样本来自同一条轨迹，样本之间相关性太强，集中优化相关性强的样本可能导致神经网络在其他样本上效果下降 👉 采样不足
+- 在损失函数中，𝑞函数的值既用来估计目标值，又用来计算当前值。现在这两处的𝑞函数通过𝜃有所关联，可能导致优化时不稳定 👉 难以收敛
+
+经验重现 Experience Replay
+- 将过去的经验存储下来，每次将新的样本加入到存储中去，并从存储中采样一批样本进行优化 
+	- 在算法对参数 θ 进行更新时，则从经验重现表中随机选取一批样本用于计算损失函数
+- 解决了样本相关性强的问题 
+- 重用经验，提高了信息利用的效率
+![Pasted image 20250530142116.png|425](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250530142116.png)
 
 
 
+目标网络 Target Network
+	$$L(\theta)=\frac12[R+\gamma\max_{a^{\prime}}\boxed{q_\pi (s^{\prime}, a^{\prime};\theta^{-})}-q_\pi (s, a;\theta)]^2$$
+- 损失函数的两个 𝑞 函数使用不同的参数计算
+- 用于计算估计值的 $q$ 使用参数 $\theta^-$ 计算，这个网络叫做目标网络
+- 用于计算当前值的 $q$ 使用参数 $\theta$ 计算
+- 保持 $\theta^-$ 的值相对稳定，例如 $\theta$ 每更新多次后才同步两者的值
+$$\theta^{-}\leftarrow\theta $$
+
+![Pasted image 20250530142322.png|450](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250530142322.png)
+
+
+### 5.3 基于策略的强化学习
+
+#todo
+
+### 5.4 深度强化学习应用
+
+![Pasted image 20250614102000.png](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250614102000.png)
+
+面临的挑战：
+- 奖励的设置
+- 样本的采集
+- 局部最优解与探索
+- 训练时的不稳定性与方差
+- 泛化和迁移能力
+
+---
+## 06 人工智能博弈
+
+#todo
 
 
 
