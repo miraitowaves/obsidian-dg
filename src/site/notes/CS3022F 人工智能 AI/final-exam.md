@@ -277,12 +277,11 @@ $$
 - 每个节点是一个**实体**，如人名、地名、事件和活动等
 - 任意两个节点之间的边表示这两个**节点之间存在的关系**
 - 任意两个相连节点及其连接边表示成一个三元组（triplet）, 即 (left_node, relation, right_node)
-	- 也可以表示为一阶逻辑 (first order logic, FOL) 的形式
+	- 也可以表示为**一阶逻辑** (first order logic, FOL) 的形式
 	  relation (left_node, right_node)
 ![Pasted image 20250613120448.png|300](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250613120448.png)
 
 **关系推理**是统计关系学习研究的基本问题：从现有知识发掘新的知识
-
 
 现在面临一个问题，如何从知识图谱中推理得到：father (David, Ann) ？
 - 从具体例子中学习如下规则
@@ -324,11 +323,17 @@ $$FOIL_{Gain}=\widehat{m_{+}}\cdot\left(\log_{2}\frac{\widehat{m_{+}}}{\widehat{
 > [!example]-
 > 
 > ![Pasted image 20250604204059.png|500](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250604204059.png)
+> 给定目标谓词，此时推理规则中只有目标谓词：
 > ![Pasted image 20250604204113.png|500](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250604204113.png)
+> 添加新的推理规则：
 > ![Pasted image 20250604204150.png|500](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250604204150.png)
+> 计算信息增益值：这里是 NA，说明这个规则不太好
 > ![Pasted image 20250604204214.png|500](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250604204214.png)
+> 更换新的推理规则：
 > ![Pasted image 20250604204451.png|500](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250604204451.png)
+> 采用新推理规则：去掉不符合新推理规则的实例
 > ![Pasted image 20250604204554.png|500](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250604204554.png)
+> 添加新推理规则：此时**不覆盖任何反例**，算法结束
 > ![Pasted image 20250604204705.png|500](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250604204705.png)
 
 
@@ -351,7 +356,7 @@ $$FOIL_{Gain}=\widehat{m_{+}}\cdot\left(\log_{2}\frac{\widehat{m_{+}}}{\widehat{
 ### 1.4 概率图谱推理
 
 概率图（probabilistic graph）
-- 如果两个节点之间存在连边，则可视为这两个节点之间具有概率依赖关系而相互影响。
+- 如果两个节点之间存在连边，则可视为这两个节点之间具有**概率依赖关系**而相互影响
 - 在这类图中，可用概率描述两个相连节点之间的关联，而不是假设节点之间的影响一定会百分之百发生。
 - **基于概率图进行的推理被称为概率推理**
 
@@ -379,10 +384,10 @@ $$FOIL_{Gain}=\widehat{m_{+}}\cdot\left(\log_{2}\frac{\widehat{m_{+}}}{\widehat{
 
 从概率统计的角度：
 - 简明描述马尔可夫网中所存在的信息之间的关联
-- 引入谓词逻辑，融入结构化知识
+- 引入**谓词逻辑**，融入结构化知识
 
 从一阶谓词逻辑角度：
-- 添加不确定性 👉 对严格推理进行松绑
+- 添加**不确定性** 👉 对严格推理进行松绑
 
 **马尔可夫逻辑网络是一种将概率图模型与一阶逻辑结合的工具**
 
@@ -395,6 +400,7 @@ $$Z=\sum_{x\in\mathcal{X}}\exp\left(\sum_iw_in_i(x)\right)$$
 > 
 > ![Pasted image 20250604221731.png|375](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250604221731.png)
 > ![Pasted image 20250604221723.png](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250604221723.png)
+> 规则为真就取 1，否则取 0
 > ![Pasted image 20250604221741.png|475](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250604221741.png)
 
 ### 1.5 因果推理
@@ -439,6 +445,7 @@ $$Z=\sum_{x\in\mathcal{X}}\exp\left(\sum_iw_in_i(x)\right)$$
 对于有向无环图模型，模型中 d 个变量的联合概率分布：
 $$P(x_1, x_2, \cdots, x_d) = \prod_{j=1}^{d} P(x_j | x_{pa(j)})$$
 - $x_{pa(j)}$ 表示节点 $x_j$ 的父节点集合 (可以为空)
+- **跟前面讲贝叶斯网络时，提到给公式是一样的**
 例如，对于一个简单的链式图 (即有向无环图) $X\to Y\to Z$, 其联合概率分布可直接写成：
 $$P(X=x,Y=y,Z=z)=P(X=x)P(Y=y|X=x)P(Z=z|Y=y)$$
 
@@ -493,10 +500,11 @@ $$
 
 #### 因果模型的层次化示意图
 
-| 可观测问题  | What if we see A (what is?)             | $P(yA)$                           |     | 关联 (association): 直接可从数据中计算得到的统计相关                               |
-| ------ | --------------------------------------- | --------------------------------- | --- | --------------------------------------------------------------- |
-| 决策行动问题 | What if we do A (what if?)              | $P(y\   |do (A))$ (如果采取 A 行为，则 y 将如何) |     | 干预 (intervention):**无法直接从观测数据就能得到关系**，如“某个商品涨价会产生什么结果”           |
-| 反事实问题  | What if we did things differently (why) | $P(y'\   |A)$ (如果 A 为真，则 y′将如何)      |     | 反事实 (counterfactual): **某个事情已经发生了**，则在相同环境中，这个事情**不发生会带来怎样的新结果** |
+| 层次化示意图 |                                         |                                    |                                                                  |
+| ------ | --------------------------------------- | ---------------------------------- | ---------------------------------------------------------------- |
+| 可观测问题  | What if we see A (what is?)             | $P(y\|A)$                          | 关联 (association): **直接可从数据中计算得到的统计相关**                           |
+| 决策行动问题 | What if we do A (what if?)              | $P(y\|do (A))$ (如果采取 A 行为，则 y 将如何) | 干预 (intervention):**无法直接从观测数据就能得到关系**，如“某个商品涨价会产生什么结果”           |
+| 反事实问题  | What if we did things differently (why) | $P(y'\|A)$ (如果 A 为真，则 y′将如何)       | 反事实 (counterfactual): **某个事情已经发生了**，则在相同环境中，这个事情**不发生会带来怎样的新结果** |
 
 
 ---
