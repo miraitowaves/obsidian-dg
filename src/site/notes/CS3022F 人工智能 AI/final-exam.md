@@ -213,9 +213,9 @@ $$
 $$(\forall x)(\forall y)A(x,y)\Rightarrow(\exists y)(\forall x)A(x,y)$$
 $$
 (\forall x)(\forall y)A(x,y)\Rightarrow(\exists x)(\forall y)A(x,y)$$
-$$(\exists y)(\forall x)A(x,y)\Leftrightarrow(\forall x)(\exists y)A(x,y)$$
+$$(\exists y)(\forall x)A(x,y)\Rightarrow(\forall x)(\exists y)A(x,y)$$
 $$
-(\exists x)(\forall y)A(x,y)\Leftrightarrow(\forall y)(\exists x)A(x,y)$$
+(\exists x)(\forall y)A(x,y)\Rightarrow(\forall y)(\exists x)A(x,y)$$
 $$(\forall x)(\exists y)A(x,y)\Rightarrow(\exists y)(\exists x)A(x,y)$$
 $$
 (\forall y)(\exists x)A(x,y)\Rightarrow(\exists x)(\exists y)A(x,y)$$
