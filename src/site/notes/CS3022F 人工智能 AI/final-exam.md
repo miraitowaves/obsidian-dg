@@ -2217,7 +2217,7 @@ $$
 > $$v_A (\sigma, h) = \pi^{\sigma_B}(h) \times \pi^{\sigma}(h, z_1) \times u_A (z_1) + \pi^{\sigma_B}(h) \times \pi^{\sigma}(h, z_2) \times u_A (z_2)$$
 > $$
 > = 0.5 \times 0.5 \times (-1) + 0.5 \times 0.5 \times (-2) = -0.75$$
-> 	已知 $u_A (z_1) = -1$ 和 $u_A (z_2) = -2$
+> 已知 $u_A (z_1) = -1$ 和 $u_A (z_2) = -2$
 > 
 > 
 > 下面计算玩家 A 在当前节点选择“过牌”行动后的虚拟价值
