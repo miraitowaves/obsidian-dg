@@ -904,7 +904,6 @@ $$l_t=\operatorname{argmax}_i\bar{x}_{i,T_{(i,t-1)}}+C\sqrt{\frac{2\ln t}{T_{(i,
 > - 演化算法：遗传算法 (genetic algorithm)、遗传规划 (genetic programming, GP)、演化策略 (evolutionary strategy)
 
 
-
 ### 3.1 机器学习基本概念
 
 通过对数据的优化学习，**建立能够刻画数据中所蕴含语义概念或分布结构等信息的模型**
@@ -937,13 +936,12 @@ $$l_t=\operatorname{argmax}_i\bar{x}_{i,T_{(i,t-1)}}+C\sqrt{\frac{2\ln t}{T_{(i,
 $$min∑_{i=1}^n​Loss(f(x_i​),y_i​)$$
 
 
-
 经验风险 empirical risk 与期望风险 expected risk
 - 经验风险是训练集中数据产生的损失
 - 期望风险是当测试集中存在**无穷多**数据时产生的损失
 ![Pasted image 20250529174836.png|450](/img/user/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250529174836.png)
 
-期望风险（即真实风险）$\mathfrak{R}$ 与经验风险 $\mathfrak{R}_{emp}$ 之间是有差别的，这个差别项被称为**置信风险**
+期望风险（即真实风险）$\mathfrak{R}$ 与经验风险 $\mathfrak{R}_{emp}$ 之间是有差别的，这个差别项被称为**置信风险(err)** 
 - err 与训练样本个数和模型复杂度都有密切的关系
 
 
@@ -1084,8 +1082,6 @@ $$info = -\sum_{i=1}^{n}{\frac{|D_i|}{|D|}\log_2{\frac{|D_i|}{|D|}}}$$
 
 $$Gain-ratio = Gain(D,A)/info$$
 
-
-
 > [!NOTE] 增益率准则对可取数目较少的属性有所偏好
 
 一个启发式：
@@ -1100,7 +1096,6 @@ $$Gini(D) = 1 - \sum_{k=1}^{K} p_k^2$$
 ### 3.4 K-means
 
 
-
 - 若干定义:
 	- n 个 m-维数据 $\{x_{1}, x_{2},..., x_{n}\}$，$x_{i}\in R^{m}$ (1≤i≤n)
 	- 两个 m 维数据之间的欧氏距离为
@@ -1109,19 +1104,19 @@ $$Gini(D) = 1 - \sum_{k=1}^{K} p_k^2$$
 - 聚类集合数目 k
 - 问题: 如何将 n 个数据依据其相似度大小将它们分别聚类到 k 个集合，使得每个数据仅属于一个聚类集合
 
-#### 算法流程
-
-- 初始化聚类质心
-	- 初始化 $k$ 个聚类质心 $c=\{c_1, c_2,..., c_k\}, c_j\in R^m (1\leq j\leq k)$
-	- 每个聚类质心 $c_j$ 所在集合记为 $G_j$
-- 将每个待聚类的数据放入唯一一个聚类集合中
-	- 计算待聚类数据 $\chi_i$ 和质心 $c_j$ 之间的欧氏距离 $d\left (x_i, c_j\right)(1\leq i\leq n, 1\leq j\leq k)$
-	- 将每个 $x_i$ 放入与之距离最近聚类质心所在聚类集合中，即 $\underset{c\in C}{\operatorname*{\operatorname*{argmin}}}d (x_i, c_j)$
-- 更新聚类质心
-	- 根据每个聚类集合中所包含的数据，更新该聚类集合质心值，即：$c_j=\frac1{|G_j|}\sum_{x_i\in G_j}x_i$
-- 算法迭代，直至满足条件
-	- 迭代次数上限
-	- 质心基本不变
+> [!NOTE] 算法流程
+> 
+> - 初始化聚类质心
+> 	- 初始化 $k$ 个聚类质心 $c=\{c_1, c_2,..., c_k\}, c_j\in R^m (1\leq j\leq k)$
+> 	- 每个聚类质心 $c_j$ 所在集合记为 $G_j$
+> - 将每个待聚类的数据放入唯一一个聚类集合中
+> 	- 计算待聚类数据 $\chi_i$ 和质心 $c_j$ 之间的欧氏距离 $d\left (x_i, c_j\right)(1\leq i\leq n, 1\leq j\leq k)$
+> 	- 将每个 $x_i$ 放入与之距离最近聚类质心所在聚类集合中，即 $\underset{c\in C}{\operatorname*{\operatorname*{argmin}}}d (x_i, c_j)$
+> - 更新聚类质心
+> 	- 根据每个聚类集合中所包含的数据，更新该聚类集合质心值，即：$c_j=\frac1{|G_j|}\sum_{x_i\in G_j}x_i$
+> - 算法迭代，直至满足条件
+> 	- 迭代次数上限
+> 	- 质心基本不变
 
 聚类算法的目标都是得到一个聚类结果，最小化类内距离（或最大化类内相似度），而最大化类间距离（或最小化类间相似度）
 
