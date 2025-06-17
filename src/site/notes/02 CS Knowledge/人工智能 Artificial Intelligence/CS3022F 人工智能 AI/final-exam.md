@@ -785,6 +785,10 @@ Alpha-Beta 剪枝搜索算法在 Minimax 算法中可减少被搜索的结点数
 > ![Pasted image 20250605132620.png](/img/user/02%20CS%20Knowledge/%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20Artificial%20Intelligence/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250605132620.png)
 > ![Pasted image 20250605132624.png](/img/user/02%20CS%20Knowledge/%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20Artificial%20Intelligence/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250605132624.png)
 
+> [!NOTE]- 如果某个结点导致了其右侧兄弟结点被剪枝，那么该节点的所有孩子结点必然已被全部扩展
+> 使用反证法即可
+> 
+> ![Pasted image 20250605134640.png|262](/img/user/02%20CS%20Knowledge/%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20Artificial%20Intelligence/CS3022F%20%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD%20AI/public/Pasted%20image%2020250605134640.png)
 
 ### 2.4 蒙特卡洛搜索
 
@@ -1807,9 +1811,8 @@ $$\pi ^{\prime }( s) = argmax _aq_\pi ( s, a)(对于任意s\in S)$$
 > - 初始化 $V_{\pi}$ 函数
 > - 循环
 > 	- 枚举 $s\in S$
-> 	$$\nu_\pi (s) \gets \sum_{a \in A} \pi (s, a) \sum_{s' \in S} Pr (s' | s, a) [R (s, a, s') + \gamma \nu_\pi (s')]$$
+> 	$$\nu_\pi (s) \gets \sum_{a \in A} \pi (s, a) \sum_{s' \in S} Pr (s' | s, a) [R (s, a, s') + \gamma \nu_\pi (s')]$$ // 第一层是策略采取当前动作 a 的概率，也要计算
 > - 直到 $V_{\pi}$ 收敛
-
 
 > [!example]-
 > 策略评估的时候，我们主要更新价值函数的值；再在策略优化的时候，更新价值-动作函数的值，从而更新策略
@@ -1868,7 +1871,7 @@ $$\pi ^{\prime }( s) = argmax _aq_\pi ( s, a)(对于任意s\in S)$$
 > - 随机初始化 $V_{\pi}$
 > - repeat
 > 	- foreach $s \in S$ do
-> 		- $V_{\pi}(s) \leftarrow \max_{a} \sum_{s'} P (s'|s, a)[R (s, a, s')+\gamma V_{\pi}(s')]$
+> 		- $V_{\pi}(s) \leftarrow \max_{a} \sum_{s'} P (s'|s, a)[R (s, a, s')+\gamma V_{\pi}(s')]$ // 这里是 max 函数
 > 	- end
 > - until $V_{\pi}$ 收敛
 > - $\pi (s) := \arg\max_{a} \sum_{s'} P (s'|s, a)[R (s, a, s')+\gamma V_{\pi}(s')]$
